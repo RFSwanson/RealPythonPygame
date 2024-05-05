@@ -14,9 +14,28 @@ from pygame.locals import (
 # Define constants for the screen width and height
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-clock = pygame.time.Clock()
-class Enemy(pygame.sprite.Sprite):
 
+clock = pygame.time.Clock()
+
+class Cloud(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Cloud,self).__init__()
+        self.surf = pygame.image.load("cloud.png").convert()
+        self.surf.set_colorkey((0,0,0),RLEACCEL)
+        #Starting position randomly generated at right of screen border
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(SCREEN_WIDTH+20,SCREEN_WIDTH+100),
+                random.randint(0,SCREEN_HEIGHT),
+            )
+        )
+    def update(self):
+        self.rect.move_ip(-2,0)
+        #kill the cloud when it leaves screen to the left
+        if self.rect.right < 0:
+            self.kill()
+
+class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
         self.surf = pygame.image.load("missile.png").convert()
@@ -24,7 +43,7 @@ class Enemy(pygame.sprite.Sprite):
         self.surf 
         self.rect = self.surf.get_rect(
             center=(
-                random.randint(SCREEN_WIDTH, SCREEN_WIDTH),
+                random.randint(SCREEN_WIDTH +20, SCREEN_WIDTH +100),
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
@@ -67,11 +86,14 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 #Create custom event for adding new enemy
 ADDENEMY = pygame.USEREVENT +1
-pygame.time.set_timer(ADDENEMY, 1000)
-
+pygame.time.set_timer(ADDENEMY, 500)
+#Create custom event for adding new cloud
+ADDCLOUD = pygame.USEREVENT +2
+pygame.time.set_timer(ADDCLOUD,1000)
 player = Player()
 # Variable to keep the main loop running
 enemies = pygame.sprite.Group()
+clouds = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 running = True
@@ -92,14 +114,19 @@ while running:
             new_enemy = Enemy()
             enemies.add(new_enemy)
             all_sprites.add(new_enemy)
-    clock.tick(60)     
+        elif event.type == ADDCLOUD:
+            new_cloud = Cloud()
+            clouds.add(new_cloud)
+            all_sprites.add(new_cloud)
+        
     pressed_keys = pygame.key.get_pressed()
     player.update(pressed_keys)
 
     enemies.update()
+    clouds.update()
 
     # Fill the screen with black
-    screen.fill((0, 0, 0))
+    screen.fill((135,206,250))
 
     # Draw the player on the screen
     #blit updates part of surface while flip updates whole surface.
@@ -113,5 +140,4 @@ while running:
 
     # Update the display
     pygame.display.flip()
-
-                
+    clock.tick(60)                
